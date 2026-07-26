@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgis/postgis:16-3.4-alpine
+        env:
+          POSTGRES_USER: ksp_user
+          POSTGRES_PASSWORD: ksp_password
+          POSTGRES_DB: ksp_crime_db_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ksp_user"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          pip install -r requirements.txt
+          pip install pytest httpx
+      - name: Run tests
+        working-directory: backend
+        env:
+          DATABASE_URL: postgresql://ksp_user:ksp_password@localhost:5432/ksp_crime_db_test
+        run: pytest -v
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm install
+      - name: Type check & build
+        working-directory: frontend
+        run: npm run build
+
+  docker-build:
+    needs: [backend, frontend]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build backend image
+        run: docker build -t ksp-backend:ci ./backend
+      - name: Build frontend image
+        run: docker build -t ksp-frontend:ci ./frontend
