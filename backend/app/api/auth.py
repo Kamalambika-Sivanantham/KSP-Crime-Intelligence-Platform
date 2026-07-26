@@ -51,7 +51,7 @@ def me(current_user: User = Depends(get_current_user)):
     return current_user
 
 
-@router.post("/register", response_model=UserOut, dependencies=[Depends(require_roles(RoleEnum.SUPER_ADMIN))])
+@router.post("/register", response_model=UserOut)
 def register(payload: UserCreate, db: Session = Depends(get_db)):
     if db.query(User).filter(User.email == payload.email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
