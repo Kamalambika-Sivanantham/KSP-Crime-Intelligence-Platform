@@ -18,7 +18,7 @@ api.interceptors.response.use(
       const refreshToken = localStorage.getItem("ksp_refresh_token");
       if (refreshToken) {
         try {
-          const { data } = await axios.post("/api/v1/auth/refresh", { refresh_token: refreshToken });
+          const { data } = await api.post("/auth/refresh",  { refresh_token: refreshToken });
           localStorage.setItem("ksp_access_token", data.access_token);
           localStorage.setItem("ksp_refresh_token", data.refresh_token);
           error.config.headers.Authorization = `Bearer ${data.access_token}`;
