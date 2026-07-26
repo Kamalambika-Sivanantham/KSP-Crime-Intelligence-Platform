@@ -2,7 +2,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api import auth, crimes, districts, dashboard, ai
-
+from app.core.database import Base, engine
+# Import all models so SQLAlchemy knows about them
+from app.models import user
+Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version="0.1.0",
